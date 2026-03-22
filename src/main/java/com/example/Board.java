@@ -9,16 +9,12 @@ import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.io.File;
 import java.util.ArrayList;
-import java.net.URL;
-import java.awt.Toolkit;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 
-//You will be implmenting a part of a function and a whole function in this document. Please follow the directions for the 
-//suggested order of completion that should make testing easier.
+// You will be implementing a part of a function and a whole function in this document.
+// Please follow the directions for the suggested order of completion that should make testing easier.
 @SuppressWarnings("serial")
 public class Board extends JPanel implements MouseListener, MouseMotionListener {
     // Resource location constants for piece images
@@ -35,8 +31,10 @@ public class Board extends JPanel implements MouseListener, MouseMotionListener 
     private static final String RESOURCES_WQUEEN_PNG = PICTURE_PATH + "wqueen.png";
     private static final String RESOURCES_WPAWN_PNG = PICTURE_PATH + "wpawn.png";
     private static final String RESOURCES_BPAWN_PNG = PICTURE_PATH + "bpawn.png";
+    private static final String RESOURCES_WMENCHUKOV_PNG = PICTURE_PATH + "wmenchukov.png";
+    private static final String RESOURCES_BMENCHUKOV_PNG = PICTURE_PATH + "bmenchukov.png";
 
-    //constant used to keep track of where the piece should be drawn when the user is dragging it
+    // constant used to keep track of where the piece should be drawn when the user is dragging it
     private static final int PIECE_OFFSET = 24;
 
     // Logical and graphical representations of board
@@ -48,15 +46,18 @@ public class Board extends JPanel implements MouseListener, MouseMotionListener 
 
     // if the player is currently dragging a piece this variable contains it.
     Piece currPiece;
-    //the square your piece came from when the user tries to move it.
+    // the square your piece came from when the user tries to move it.
     private Square fromMoveSquare;
-    //the square your piece tries to go to when the user tries to move it.
+    // the square your piece tries to go to when the user tries to move it.
     private Square endSquare;
 
     // used to keep track of the x/y coordinates of the mouse.
     private int currX;
     private int currY;
 
+    // precondition: g is a non-null valid GameWindow object.
+    // postcondition: a full 8 by 8 board of alternating colored squares is created,
+    // pieces are initialized, and the board is ready to be displayed.
     public Board(GameWindow g) {
         this.g = g;
         board = new Square[8][8];
@@ -65,17 +66,16 @@ public class Board extends JPanel implements MouseListener, MouseMotionListener 
         this.addMouseListener(this);
         this.addMouseMotionListener(this);
 
-        // TO BE IMPLEMENTED FIRST
+        // populate the board with squares in row major order.
+        // each outer level is a row, each inner level is a column.
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                boolean isWhiteSquare = ((row + col) % 2 == 0);
+                board[row][col] = new Square(this, isWhiteSquare, row, col);
+                this.add(board[row][col]);
+            }
+        }
 
-        // for (.....)
-        // populate the board with squares here. Note that the board is composed of 64
-        // squares alternating from white to black.
-        //IMPORTANT**** : please note for each square you create you HAVE to do "this.add(<your new square here>)" 
-        //the reason this is required has to do with how visual components are rendered, so if you neglect to do this
-        //you will not see any of your squares show up on the board!
-        // Where's the "add" method? Stay tuned for next unit where we discover where it is and why we can do this action.
-        
-        
         initializePieces();
 
         this.setPreferredSize(new Dimension(400, 400));
@@ -84,18 +84,42 @@ public class Board extends JPanel implements MouseListener, MouseMotionListener 
         this.setSize(new Dimension(400, 400));
 
         whiteTurn = true;
-
     }
 
-    // set up the board such that the black pieces are on one side and the white
-    // pieces are on the other.
-    // since we only have one kind of piece for now you need only set the same
-    // number of pieces on either side.
-    // it's up to you how you wish to arrange your pieces.
+    // precondition: board has already been filled with valid Square objects.
+    // postcondition: the starting pieces are placed in purposeful positions for both sides.
     void initializePieces() {
+        // White back row
+        board[0][0].put(new Piece(true, RESOURCES_WROOK_PNG, "rook"));
+        board[0][1].put(new Piece(true, RESOURCES_WKNIGHT_PNG, "knight"));
+        board[0][2].put(new Piece(true, RESOURCES_WBISHOP_PNG, "bishop"));
+        board[0][3].put(new Piece(true, RESOURCES_WKING_PNG, "king"));
+        board[0][4].put(new Piece(true, RESOURCES_WQUEEN_PNG, "queen"));
+        board[0][5].put(new Piece(true, RESOURCES_WBISHOP_PNG, "bishop"));
+        board[0][6].put(new Piece(true, RESOURCES_WKNIGHT_PNG, "knight"));
+        board[0][7].put(new Piece(true, RESOURCES_WROOK_PNG, "rook"));
 
-        board[0][0].put(new Piece(true, RESOURCES_WKING_PNG));
+        // Black back row
+        board[7][0].put(new Piece(false, RESOURCES_BROOK_PNG, "rook"));
+        board[7][1].put(new Piece(false, RESOURCES_BKNIGHT_PNG, "knight"));
+        board[7][2].put(new Piece(false, RESOURCES_BBISHOP_PNG, "bishop"));
+        board[7][3].put(new Piece(false, RESOURCES_BKING_PNG, "king"));
+        board[7][4].put(new Piece(false, RESOURCES_BQUEEN_PNG, "queen"));
+        board[7][5].put(new Piece(false, RESOURCES_BBISHOP_PNG, "bishop"));
+        board[7][6].put(new Piece(false, RESOURCES_BKNIGHT_PNG, "knight"));
+        board[7][7].put(new Piece(false, RESOURCES_BROOK_PNG, "rook"));
 
+        // Pawns
+        for (int col = 0; col < 8; col++) {
+            board[1][col].put(new Piece(true, RESOURCES_WPAWN_PNG, "pawn"));
+            board[6][col].put(new Piece(false, RESOURCES_BPAWN_PNG, "pawn"));
+        }
+
+        // Menchukov pieces
+        // a3 = row 2, col 0
+        // a6 = row 5, col 0
+        board[2][0].put(new Piece(true, RESOURCES_WMENCHUKOV_PNG, "menchukov"));
+        board[5][0].put(new Piece(false, RESOURCES_BMENCHUKOV_PNG, "menchukov"));
     }
 
     public Square[][] getSquareArray() {
@@ -126,7 +150,7 @@ public class Board extends JPanel implements MouseListener, MouseMotionListener 
         if (currPiece != null) {
             if (currPiece.getColor() == whiteTurn) {
                 final Image img = currPiece.getImage();
-                g.drawImage(img, currX, currY, null);
+                g.drawImage(img, currX, currY, 50, 50, null);
             }
         }
     }
@@ -140,24 +164,45 @@ public class Board extends JPanel implements MouseListener, MouseMotionListener 
 
         if (sq.isOccupied() && sq.getOccupyingPiece().getColor() == whiteTurn) {
             currPiece = sq.getOccupyingPiece();
+
+            for (Square s : currPiece.getLegalMoves(this, sq)) {
+                s.setBorder(BorderFactory.createMatteBorder(4, 4, 4, 4, Color.red));
+            }
+
             fromMoveSquare = sq;
             sq.setDisplay(false);
         }
         repaint();
     }
 
-    // TO BE IMPLEMENTED!
-    // should move the piece to the desired location only if this is a legal move.
-    // use the pieces "legal move" function to determine if this move is legal, then
-    // complete it by moving the new piece to it's new board location.
+    // precondition: the user has released the mouse after selecting a piece.
+    // postcondition: if the destination square is legal, the piece is moved there.
+    // otherwise the piece returns to its original square.
     @Override
     public void mouseReleased(MouseEvent e) {
-        endSquare = (Square) this.getComponentAt(new Point(e.getX(), e.getY()));
+        if (currPiece == null) {
+            return;
+        }
 
-        // using currPiece
-        if(fromMoveSquare!= null){
+        for (Square[] row : board) {
+            for (Square s : row) {
+                s.setBorder(null);
+            }
+        }
+
+        endSquare = (Square) this.getComponentAt(new Point(e.getX(), e.getY()));
+        ArrayList<Square> legalMoves = currPiece.getLegalMoves(this, fromMoveSquare);
+
+        if (legalMoves.contains(endSquare)) {
+            endSquare.put(currPiece);
+            fromMoveSquare.removePiece();
+            whiteTurn = !whiteTurn;
+        }
+
+        if (fromMoveSquare != null) {
             fromMoveSquare.setDisplay(true);
         }
+
         currPiece = null;
         repaint();
     }
@@ -166,7 +211,6 @@ public class Board extends JPanel implements MouseListener, MouseMotionListener 
     public void mouseDragged(MouseEvent e) {
         currX = e.getX() - PIECE_OFFSET;
         currY = e.getY() - PIECE_OFFSET;
-
         repaint();
     }
 
@@ -185,5 +229,4 @@ public class Board extends JPanel implements MouseListener, MouseMotionListener 
     @Override
     public void mouseExited(MouseEvent e) {
     }
-
 }
