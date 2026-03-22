@@ -9,7 +9,7 @@ import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
 
-// you will need to implement two functions in this file.
+
 public class Piece {
     private final boolean color;
     private BufferedImage img;
